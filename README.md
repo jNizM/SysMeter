@@ -12,7 +12,7 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Screenshot
-![Screenshot](Screenshot.png)
+![Screenshot](Screenshot.PNG)
 
 
 ## Info
