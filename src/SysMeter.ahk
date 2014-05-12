@@ -3,13 +3,13 @@
 ; Win Version ...: Windows 7 Professional x64 SP1
 ; Description ...: Shows Info about Total, Free, Used Memory in MB;
 ;                  Total Memory in Percentage & Clear unused Memory Function
-; Version .......: v0.1
-; Modified ......: 2014.05.08-2027
+; Version .......: v0.2
+; Modified ......: 2014.05.11-1722
 ; Author ........: jNizM
 ; ===================================================================================
 ;@Ahk2Exe-SetName SysMeter
 ;@Ahk2Exe-SetDescription SysMeter
-;@Ahk2Exe-SetVersion v0.1
+;@Ahk2Exe-SetVersion v0.2
 ;@Ahk2Exe-SetCopyright Copyright (c) 2013-2014`, jNizM
 ;@Ahk2Exe-SetOrigFilename SysMeter.ahk
 ; ===================================================================================
@@ -22,7 +22,7 @@
 SetBatchLines -1
 
 global name      := "sysmeter"
-global version   := "v0.1"
+global version   := "v0.2"
 global varPerc   := 0
 
 ; MENU ==============================================================================
@@ -31,13 +31,12 @@ Menu, Tray, DeleteAll
 Menu, Tray, NoStandard
 Menu, Tray, Add, Toggle Percentage, Menu_Percentage
 Menu, Tray, Add,
-Menu, Tray, Add, Toggle Transparency, Menu_Transparency
+Menu, Tray, Add, Reset Transparency, Menu_Transparency
 Menu, Tray, Add, Toggle AlwaysOnTop, Menu_AlwaysOnTop
 Menu, Tray, Add, Show/Hide, Menu_ShowHide
 Menu, Tray, Add,
 Menu, Tray, Add, Exit, Close
 Menu, Tray, Default, Show/Hide
-Menu, Tray, ToggleCheck, Toggle Transparency
 
 ; GUI MAIN ==========================================================================
 
@@ -62,9 +61,9 @@ loop, Parse, DrvLstFxd
     Gui, Add, Progress, xm y+2 w200 h6 c13a7c7 Background686868 vT%A_Loopfield%RV,
 }
 Gui, Show, AutoSize, % name
-WinSet, Transparent, 150, % name
+WinSet, Transparent, 170, % name
 OnMessage(0x201, "WM_LBUTTONDOWN")
-SetTimer, Update, 2000
+SetTimer, Update, 1000
 return
 
 ; SCRIPT ============================================================================
@@ -107,9 +106,7 @@ Menu_Percentage:
 return
 
 Menu_Transparency:
-    WinGet, ct, Transparent, % name
-    WinSet, Transparent, % ct = "150" ? "Off" : "150", % name
-    Menu, Tray, ToggleCheck, Toggle Transparency
+    WinSet, Transparent, 170, % name
 return
 
 Menu_AlwaysOnTop:
@@ -131,7 +128,16 @@ Menu_ShowHide:
     }
 return
 
+^WheelUp::GUITrans(1)
+^WheelDown::GUITrans(0)
+
 ; FUNCTIONS =========================================================================
+
+GUITrans(b := 1)
+{
+    WinGet, ct, Transparent, % name
+	WinSet, Transparent, % ((b = 1) ? ct + 1 : ct - 1), % name
+}
 
 WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
 {

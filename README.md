@@ -7,20 +7,21 @@ Shows ComputerInfo via AutoHotkey
 * Shows RAM & SWAP Usage
 * Shows Drives Usage
 * Toggle MB/GB to Percentage
-* Toggle Transparency
+* Toggle & Reset Transparency
 * Toggle AlwaysOnTop
 
 
 ## Screenshot
-![Screenshot](Screenshot.PNG)
+![Screenshot](Screenshot.png)
 
 
 ## Info
-* Version: v0.1
+* Version: v0.2
 * URL: [AHK Thread](http://ahkscript.org/boards/viewtopic.php?f=6&t=3521)
 
 
 ## Changelog
+* 0.2 | Scale transparency with Strg+MWHEEL(UP|DOWN)
 * 0.1 | First Release
 
 
