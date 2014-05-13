@@ -3,13 +3,13 @@
 ; Win Version ...: Windows 7 Professional x64 SP1
 ; Description ...: Shows Info about Total, Free, Used Memory in MB;
 ;                  Total Memory in Percentage & Clear unused Memory Function
-; Version .......: v0.2
-; Modified ......: 2014.05.11-1722
+; Version .......: v0.3
+; Modified ......: 2014.05.12-1822
 ; Author ........: jNizM
 ; ===================================================================================
 ;@Ahk2Exe-SetName SysMeter
 ;@Ahk2Exe-SetDescription SysMeter
-;@Ahk2Exe-SetVersion v0.2
+;@Ahk2Exe-SetVersion v0.3
 ;@Ahk2Exe-SetCopyright Copyright (c) 2013-2014`, jNizM
 ;@Ahk2Exe-SetOrigFilename SysMeter.ahk
 ; ===================================================================================
@@ -22,14 +22,31 @@
 SetBatchLines -1
 
 global name      := "sysmeter"
-global version   := "v0.2"
-global varPerc   := 0
+global version   := "v0.3"
+global inifile   := "sysmeter.ini"
+global perc      := 0
+
+; LOAD INI SETTINGS =================================================================
+
+if FileExist(inifile)
+{
+    IniRead, winx, % inifile, settings, winPosX
+    IniRead, winy, % inifile, settings, winPosY
+    IniRead, perc, % inifile, settings, percentage
+    IniRead, tran, % inifile, settings, transparency
+}
 
 ; MENU ==============================================================================
 
 Menu, Tray, DeleteAll
 Menu, Tray, NoStandard
+Menu, Tray, Add, Save Settings, Menu_SaveSettings
+Menu, Tray, Add,
 Menu, Tray, Add, Toggle Percentage, Menu_Percentage
+if (perc = 1)
+{
+    Menu, Tray, ToggleCheck, Toggle Percentage
+}
 Menu, Tray, Add,
 Menu, Tray, Add, Reset Transparency, Menu_Transparency
 Menu, Tray, Add, Toggle AlwaysOnTop, Menu_AlwaysOnTop
@@ -60,8 +77,8 @@ loop, Parse, DrvLstFxd
     Gui, Add, Text, x+5 yp w120 0x202 vP%A_Loopfield%RV,
     Gui, Add, Progress, xm y+2 w200 h6 c13a7c7 Background686868 vT%A_Loopfield%RV,
 }
-Gui, Show, AutoSize, % name
-WinSet, Transparent, 170, % name
+Gui, Show, % ((winX != "") ? winX : "") ((winY != "") ? winY : "") AutoSize, % name
+WinSet, Transparent, % ((tran != "") ? tran : 200), % name
 OnMessage(0x201, "WM_LBUTTONDOWN")
 SetTimer, Update, 1000
 return
@@ -83,9 +100,9 @@ Update:
     GMSExS02 := Round(GMSEx[5] / 1024**2, 2)               ; Available PageFile in MB
     GMSExS03 := Round(GMSExS01 - GMSExS02, 2)              ; Used PageFile in MB
     GMSExS04 := Round(GMSExS03 / GMSExS01 * 100, 2)        ; Used PageFile in %
-    GuiControl,, TRAM, % (varPerc = "1") ? GMSExM05 " %" : GMSExM04 "/" GMSExM02 " MB"
+    GuiControl,, TRAM, % ((perc = "1") ? GMSExM05 " %" : GMSExM04 "/" GMSExM02 " MB")
     GuiControl,, PRAM, % GMSExM01
-    GuiControl,, TSWP, % (varPerc = "1") ? GMSExS04 " %" : GMSExS03 "/" GMSExS01 " MB"
+    GuiControl,, TSWP, % ((perc = "1") ? GMSExS04 " %" : GMSExS03 "/" GMSExS01 " MB")
     GuiControl,, PSWP, % GMSExS04
     
     loop, Parse, DrvLstFxd
@@ -95,18 +112,22 @@ Update:
         DriveSpaceFree, free%i%, %i%:\
         used%i% := cap%i% - free%i%
         perc%i% := used%i% / cap%i% * 100
-        GuiControl,, P%i%RV, % (varPerc = "1") ? round(perc%i%, 2) " %" : round((used%i% / 1024), 2) "/" round((cap%i% / 1024), 2) " GB"
+        GuiControl,, P%i%RV, % ((perc = "1") ? round(perc%i%, 2) " %" : round((used%i% / 1024), 2) "/" round((cap%i% / 1024), 2) " GB")
         GuiControl,, T%i%RV, % perc%i%
     }
 return
 
+Menu_SaveSettings:
+    IniSettings(perc)
+return
+
 Menu_Percentage:
-    varPerc := (varPerc = "0") ? "1" : "0"
+    perc := (perc = "0") ? "1" : "0"
     Menu, Tray, ToggleCheck, Toggle Percentage
 return
 
 Menu_Transparency:
-    WinSet, Transparent, 170, % name
+    WinSet, Transparent, 200, % name
 return
 
 Menu_AlwaysOnTop:
@@ -133,19 +154,29 @@ return
 
 ; FUNCTIONS =========================================================================
 
-GUITrans(b := 1)
-{
-    WinGet, ct, Transparent, % name
-	WinSet, Transparent, % ((b = 1) ? ct + 1 : ct - 1), % name
-}
-
-WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
+WM_LBUTTONDOWN(wParam, lParam, msg, hwnd) ; WM_LBUTTONDOWN() by an AHK-Member
 {
     global hMain
     if (hwnd = hMain)
     {
         PostMessage, 0xA1, 2,,, % name
     }
+}
+
+GUITrans(b := 1) ; GUITrans() by jNizM
+{
+    WinGet, ct, Transparent, % name
+    WinSet, Transparent, % ((b = 1) ? ct + 1 : ct - 1), % name
+}
+
+IniSettings(perc) ; IniSettings() by jNizM
+{
+    WinGetPos, winX, winY,,, % name
+    IniWrite, % "X" winX, % inifile, settings, winPosX
+    IniWrite, % "Y" winY, % inifile, settings, winPosY
+    IniWrite, % perc, % inifile, settings, percentage
+    WinGet, ct, Transparent, % name
+    IniWrite, % ct, % inifile, settings, transparency
 }
 
 CPULoad() ; CPULoad() by SKAN
@@ -172,7 +203,7 @@ GlobalMemoryStatusEx() ; GlobalMemoryStatusEx() by jNizM
     }
 }
 
-; FUNCTIONS =========================================================================
+; EXIT ==============================================================================
 
 Close:
 GuiClose:

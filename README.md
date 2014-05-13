@@ -9,6 +9,7 @@ Shows ComputerInfo via AutoHotkey
 * Toggle MB/GB to Percentage
 * Toggle & Reset Transparency
 * Toggle AlwaysOnTop
+* Save Ini-Settings
 
 
 ## Screenshot
@@ -16,11 +17,12 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Info
-* Version: v0.2
+* Version: v0.3
 * URL: [AHK Thread](http://ahkscript.org/boards/viewtopic.php?f=6&t=3521)
 
 
 ## Changelog
+* 0.3 | Save & Load Ini-Settings
 * 0.2 | Scale transparency with Strg+MWHEEL(UP|DOWN)
 * 0.1 | First Release
 
