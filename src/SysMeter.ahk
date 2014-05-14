@@ -3,13 +3,13 @@
 ; Win Version ...: Windows 7 Professional x64 SP1
 ; Description ...: Shows Info about Total, Free, Used Memory in MB;
 ;                  Total Memory in Percentage & Clear unused Memory Function
-; Version .......: v0.3
-; Modified ......: 2014.05.12-1822
+; Version .......: v0.4
+; Modified ......: 2014.05.13-2133
 ; Author ........: jNizM
 ; ===================================================================================
 ;@Ahk2Exe-SetName SysMeter
 ;@Ahk2Exe-SetDescription SysMeter
-;@Ahk2Exe-SetVersion v0.3
+;@Ahk2Exe-SetVersion v0.4
 ;@Ahk2Exe-SetCopyright Copyright (c) 2013-2014`, jNizM
 ;@Ahk2Exe-SetOrigFilename SysMeter.ahk
 ; ===================================================================================
@@ -21,10 +21,15 @@
 #SingleInstance Force
 SetBatchLines -1
 
-global name      := "sysmeter"
-global version   := "v0.3"
-global inifile   := "sysmeter.ini"
-global perc      := 0
+global name      := "sysmeter"            ; gui name
+global version   := "v0.4"                ; version number
+global inifile   := "sysmeter.ini"        ; filename of .ini
+global perc      := 0                     ; toggle between % and GB
+global cgbg      := "464646"              ; gui background color
+global cpcpu     := "13a7c7"              ; progressbar color cpu
+global cpmem     := "13a7c7"              ; progressbar color ram & swp
+global cphdd     := "13a7c7"              ; progressbar color hdd
+global cpbg      := "686868"              ; progressbar background color
 
 ; LOAD INI SETTINGS =================================================================
 
@@ -34,6 +39,11 @@ if FileExist(inifile)
     IniRead, winy, % inifile, settings, winPosY
     IniRead, perc, % inifile, settings, percentage
     IniRead, tran, % inifile, settings, transparency
+    IniRead, cgbg,   % inifile, colors, color_guibg
+    IniRead, cpcpu, % inifile, colors, color_pgbar_cpu
+    IniRead, cpmem, % inifile, colors, color_pgbar_mem
+    IniRead, cphdd, % inifile, colors, color_pgbar_hdd
+    IniRead, cpbg,   % inifile, colors, color_pgbg
 }
 
 ; MENU ==============================================================================
@@ -41,6 +51,13 @@ if FileExist(inifile)
 Menu, Tray, DeleteAll
 Menu, Tray, NoStandard
 Menu, Tray, Add, Save Settings, Menu_SaveSettings
+Menu, Tray, Add,
+Menu, Menu_color, Add, Blue, Menu_Color_Blue
+Menu, Menu_color, Add, Lime, Menu_Color_Lime
+Menu, Menu_color, Add, Red, Menu_Color_Red
+Menu, Menu_color, Add, Purple, Menu_Color_Purple
+Menu, Menu_color, Add, Mix, Menu_Color_Mix
+Menu, Tray, Add, Color Scheme, :Menu_Color
 Menu, Tray, Add,
 Menu, Tray, Add, Toggle Percentage, Menu_Percentage
 if (perc = 1)
@@ -57,25 +74,26 @@ Menu, Tray, Default, Show/Hide
 
 ; GUI MAIN ==========================================================================
 
+Create_Gui:
 Gui +LastFound -Caption +ToolWindow +hwndhMain
 Gui, Margin, 10, 10
-Gui, Color, 464646
+Gui, Color, % cgbg
 Gui, Font, s10 cFFFFFF bold, Agency FB
-Gui, Add, Text, xm ym w75 0x200, % "CPU Usage:"
+Gui, Add, Text, xm y+7 w75 0x200, % "CPU"
 Gui, Add, Text, x+5 yp w120 0x202 vTCPU,
-Gui, Add, Progress, xm y+2 w200 h6 c13a7c7 Background686868 vPCPU,
-Gui, Add, Text, xm y+7 w75 0x200, % "RAM Usage:"
+Gui, Add, Progress, xm y+2 w200 h6 c%cpcpu% Background%cpbg% vPCPU,
+Gui, Add, Text, xm y+7 w75 0x200, % "RAM"
 Gui, Add, Text, x+5 yp w120 0x202 vTRAM,
-Gui, Add, Progress, xm y+2 w200 h6 c13a7c7 Background686868 vPRAM,
-Gui, Add, Text, xm y+7 w75 0x200, % "SWAP Usage:"
+Gui, Add, Progress, xm y+2 w200 h6 c%cpmem% Background%cpbg% vPRAM,
+Gui, Add, Text, xm y+7 w75 0x200, % "SWAP"
 Gui, Add, Text, x+5 yp w120 0x202 vTSWP,
-Gui, Add, Progress, xm y+2 w200 h6 c13a7c7 Background686868 vPSWP,
+Gui, Add, Progress, xm y+2 w200 h6 c%cpmem% Background%cpbg% vPSWP,
 DriveGet, DrvLstFxd, List, FIXED
 loop, Parse, DrvLstFxd
 {
     Gui, Add, Text, xm y+7 w75 0x200, %A_Loopfield%:\
     Gui, Add, Text, x+5 yp w120 0x202 vP%A_Loopfield%RV,
-    Gui, Add, Progress, xm y+2 w200 h6 c13a7c7 Background686868 vT%A_Loopfield%RV,
+    Gui, Add, Progress, xm y+2 w200 h6 c%cphdd% Background%cpbg% vT%A_Loopfield%RV,
 }
 Gui, Show, % ((winX != "") ? winX : "") ((winY != "") ? winY : "") AutoSize, % name
 WinSet, Transparent, % ((tran != "") ? tran : 200), % name
@@ -92,17 +110,17 @@ Update:
     
     GMSEx := GlobalMemoryStatusEx()
     GMSExM01 := GMSEx[1]                                   ; MemoryLoad in %
-    GMSExM02 := Round(GMSEx[2] / 1024**2, 2)               ; Total Physical Memory in MB
-    GMSExM03 := Round(GMSEx[3] / 1024**2, 2)               ; Available Physical Memory in MB
+    GMSExM02 := Round(GMSEx[2] / 1024**3, 2)               ; Total Physical Memory in MB
+    GMSExM03 := Round(GMSEx[3] / 1024**3, 2)               ; Available Physical Memory in MB
     GMSExM04 := Round(GMSExM02 - GMSExM03, 2)              ; Used Physical Memory in MB
     GMSExM05 := Round(GMSExM04 / GMSExM02 * 100, 2)        ; Used Physical Memory in %
-    GMSExS01 := Round(GMSEx[4] / 1024**2, 2)               ; Total PageFile in MB
-    GMSExS02 := Round(GMSEx[5] / 1024**2, 2)               ; Available PageFile in MB
+    GMSExS01 := Round(GMSEx[4] / 1024**3, 2)               ; Total PageFile in MB
+    GMSExS02 := Round(GMSEx[5] / 1024**3, 2)               ; Available PageFile in MB
     GMSExS03 := Round(GMSExS01 - GMSExS02, 2)              ; Used PageFile in MB
     GMSExS04 := Round(GMSExS03 / GMSExS01 * 100, 2)        ; Used PageFile in %
-    GuiControl,, TRAM, % ((perc = "1") ? GMSExM05 " %" : GMSExM04 "/" GMSExM02 " MB")
-    GuiControl,, PRAM, % GMSExM01
-    GuiControl,, TSWP, % ((perc = "1") ? GMSExS04 " %" : GMSExS03 "/" GMSExS01 " MB")
+    GuiControl,, TRAM, % ((perc = "1") ? GMSExM05 " %" : GMSExM04 "/" GMSExM02 " GB")
+    GuiControl,, PRAM, % GMSExM05
+    GuiControl,, TSWP, % ((perc = "1") ? GMSExS04 " %" : GMSExS03 "/" GMSExS01 " GB")
     GuiControl,, PSWP, % GMSExS04
     
     loop, Parse, DrvLstFxd
@@ -118,7 +136,57 @@ Update:
 return
 
 Menu_SaveSettings:
-    IniSettings(perc)
+    IniSettings(perc, cgbg, cpcpu, cpmem, cphdd, cpbg)
+return
+
+Menu_Color_Blue:
+    cgbg  := "464646"
+    cpcpu := "13a7c7"
+    cpmem := "13a7c7"
+    cphdd := "13a7c7"
+    cpbg  := "686868"
+    Gui, Destroy
+    gosub Create_Gui
+return
+
+Menu_Color_Lime:
+    cgbg  := "464646"
+    cpcpu := "b7fe36"
+    cpmem := "b7fe36"
+    cphdd := "b7fe36"
+    cpbg  := "686868"
+    Gui, Destroy
+    gosub Create_Gui
+return
+
+Menu_Color_Red:
+    cgbg  := "464646"
+    cpcpu := "ff4444"
+    cpmem := "ff4444"
+    cphdd := "ff4444"
+    cpbg  := "686868"
+    Gui, Destroy
+    gosub Create_Gui
+return
+
+Menu_Color_Purple:
+    cgbg  := "464646"
+    cpcpu := "aa66cc"
+    cpmem := "aa66cc"
+    cphdd := "aa66cc"
+    cpbg  := "686868"
+    Gui, Destroy
+    gosub Create_Gui
+return
+
+Menu_Color_Mix:
+    cgbg  := "464646"
+    cpcpu := "32cd32"
+    cpmem := "ff8c00"
+    cphdd := "1e90ff"
+    cpbg  := "686868"
+    Gui, Destroy
+    gosub Create_Gui
 return
 
 Menu_Percentage:
@@ -169,7 +237,7 @@ GUITrans(b := 1) ; GUITrans() by jNizM
     WinSet, Transparent, % ((b = 1) ? ct + 1 : ct - 1), % name
 }
 
-IniSettings(perc) ; IniSettings() by jNizM
+IniSettings(perc, cgbg, cpcpu, cpmem, cphdd, cpbg) ; IniSettings() by jNizM
 {
     WinGetPos, winX, winY,,, % name
     IniWrite, % "X" winX, % inifile, settings, winPosX
@@ -177,6 +245,12 @@ IniSettings(perc) ; IniSettings() by jNizM
     IniWrite, % perc, % inifile, settings, percentage
     WinGet, ct, Transparent, % name
     IniWrite, % ct, % inifile, settings, transparency
+
+    IniWrite, % cgbg,  % inifile, colors, color_guibg
+    IniWrite, % cpcpu, % inifile, colors, color_pgbar_cpu
+    IniWrite, % cpmem, % inifile, colors, color_pgbar_mem
+    IniWrite, % cphdd, % inifile, colors, color_pgbar_hdd
+    IniWrite, % cpbg,  % inifile, colors, color_pgbg
 }
 
 CPULoad() ; CPULoad() by SKAN
