@@ -3,13 +3,13 @@
 ; Win Version ...: Windows 7 Professional x64 SP1
 ; Description ...: Shows Info about Total, Free, Used Memory in MB;
 ;                  Total Memory in Percentage & Clear unused Memory Function
-; Version .......: v0.4
-; Modified ......: 2014.05.13-2133
+; Version .......: v0.5
+; Modified ......: 2014.05.14-1908
 ; Author ........: jNizM
 ; ===================================================================================
 ;@Ahk2Exe-SetName SysMeter
 ;@Ahk2Exe-SetDescription SysMeter
-;@Ahk2Exe-SetVersion v0.4
+;@Ahk2Exe-SetVersion v0.5
 ;@Ahk2Exe-SetCopyright Copyright (c) 2013-2014`, jNizM
 ;@Ahk2Exe-SetOrigFilename SysMeter.ahk
 ; ===================================================================================
@@ -22,9 +22,10 @@
 SetBatchLines -1
 
 global name      := "sysmeter"            ; gui name
-global version   := "v0.4"                ; version number
+global version   := "v0.5"                ; version number
 global inifile   := "sysmeter.ini"        ; filename of .ini
-global perc      := 0                     ; toggle between % and GB
+global showPerc  := 1                     ; toggle between % and GB (0 = GB  | 1 = % )
+global aot       := 0                     ; toggle alwaysontop (0 = Off | 1 = On)
 global cgbg      := "464646"              ; gui background color
 global cpcpu     := "13a7c7"              ; progressbar color cpu
 global cpmem     := "13a7c7"              ; progressbar color ram & swp
@@ -37,13 +38,14 @@ if FileExist(inifile)
 {
     IniRead, winx, % inifile, settings, winPosX
     IniRead, winy, % inifile, settings, winPosY
-    IniRead, perc, % inifile, settings, percentage
+    IniRead, showPerc, % inifile, settings, showPerc
+    IniRead, aot, % inifile, settings, alwaysOnTop
     IniRead, tran, % inifile, settings, transparency
-    IniRead, cgbg,   % inifile, colors, color_guibg
+    IniRead, cgbg, % inifile, colors, color_guibg
     IniRead, cpcpu, % inifile, colors, color_pgbar_cpu
     IniRead, cpmem, % inifile, colors, color_pgbar_mem
     IniRead, cphdd, % inifile, colors, color_pgbar_hdd
-    IniRead, cpbg,   % inifile, colors, color_pgbg
+    IniRead, cpbg, % inifile, colors, color_pgbg
 }
 
 ; MENU ==============================================================================
@@ -60,13 +62,11 @@ Menu, Menu_color, Add, Mix, Menu_Color_Mix
 Menu, Tray, Add, Color Scheme, :Menu_Color
 Menu, Tray, Add,
 Menu, Tray, Add, Toggle Percentage, Menu_Percentage
-if (perc = 1)
-{
-    Menu, Tray, ToggleCheck, Toggle Percentage
-}
+Menu, Tray, % ((showPerc = "1") ? "Check" : "Uncheck"), Toggle Percentage
 Menu, Tray, Add,
 Menu, Tray, Add, Reset Transparency, Menu_Transparency
 Menu, Tray, Add, Toggle AlwaysOnTop, Menu_AlwaysOnTop
+Menu, Tray, % ((aot = "1") ? "Check" : "Uncheck"), Toggle AlwaysOnTop
 Menu, Tray, Add, Show/Hide, Menu_ShowHide
 Menu, Tray, Add,
 Menu, Tray, Add, Exit, Close
@@ -79,24 +79,25 @@ Gui +LastFound -Caption +ToolWindow +hwndhMain
 Gui, Margin, 10, 10
 Gui, Color, % cgbg
 Gui, Font, s10 cFFFFFF bold, Agency FB
-Gui, Add, Text, xm y+7 w75 0x200, % "CPU"
-Gui, Add, Text, x+5 yp w120 0x202 vTCPU,
+Gui, Add, Text, xm ym w50 0x200, % "CPU"
+Gui, Add, Text, x+5 yp w145 0x202 vTCPU,
 Gui, Add, Progress, xm y+2 w200 h6 c%cpcpu% Background%cpbg% vPCPU,
-Gui, Add, Text, xm y+7 w75 0x200, % "RAM"
-Gui, Add, Text, x+5 yp w120 0x202 vTRAM,
+Gui, Add, Text, xm y+7 w50 0x200, % "RAM"
+Gui, Add, Text, x+5 yp w145 0x202 vTRAM,
 Gui, Add, Progress, xm y+2 w200 h6 c%cpmem% Background%cpbg% vPRAM,
-Gui, Add, Text, xm y+7 w75 0x200, % "SWAP"
-Gui, Add, Text, x+5 yp w120 0x202 vTSWP,
+Gui, Add, Text, xm y+7 w50 0x200, % "SWAP"
+Gui, Add, Text, x+5 yp w145 0x202 vTSWP,
 Gui, Add, Progress, xm y+2 w200 h6 c%cpmem% Background%cpbg% vPSWP,
 DriveGet, DrvLstFxd, List, FIXED
 loop, Parse, DrvLstFxd
 {
-    Gui, Add, Text, xm y+7 w75 0x200, %A_Loopfield%:\
-    Gui, Add, Text, x+5 yp w120 0x202 vP%A_Loopfield%RV,
+    Gui, Add, Text, xm y+7 w50 0x200, %A_Loopfield%:\
+    Gui, Add, Text, x+5 yp w145 0x202 vP%A_Loopfield%RV,
     Gui, Add, Progress, xm y+2 w200 h6 c%cphdd% Background%cpbg% vT%A_Loopfield%RV,
 }
 Gui, Show, % ((winX != "") ? winX : "") ((winY != "") ? winY : "") AutoSize, % name
 WinSet, Transparent, % ((tran != "") ? tran : 200), % name
+WinSet, AlwaysOnTop, % ((aot = "1") ? "On" : "Off"), % name 
 OnMessage(0x201, "WM_LBUTTONDOWN")
 SetTimer, Update, 1000
 return
@@ -118,9 +119,9 @@ Update:
     GMSExS02 := Round(GMSEx[5] / 1024**3, 2)               ; Available PageFile in MB
     GMSExS03 := Round(GMSExS01 - GMSExS02, 2)              ; Used PageFile in MB
     GMSExS04 := Round(GMSExS03 / GMSExS01 * 100, 2)        ; Used PageFile in %
-    GuiControl,, TRAM, % ((perc = "1") ? GMSExM05 " %" : GMSExM04 "/" GMSExM02 " GB")
+    GuiControl,, TRAM, % ((showPerc = "1") ? GMSExM05 " %" : GMSExM04 "/" GMSExM02 " GB")
     GuiControl,, PRAM, % GMSExM05
-    GuiControl,, TSWP, % ((perc = "1") ? GMSExS04 " %" : GMSExS03 "/" GMSExS01 " GB")
+    GuiControl,, TSWP, % ((showPerc = "1") ? GMSExS04 " %" : GMSExS03 "/" GMSExS01 " GB")
     GuiControl,, PSWP, % GMSExS04
     
     loop, Parse, DrvLstFxd
@@ -130,13 +131,13 @@ Update:
         DriveSpaceFree, free%i%, %i%:\
         used%i% := cap%i% - free%i%
         perc%i% := used%i% / cap%i% * 100
-        GuiControl,, P%i%RV, % ((perc = "1") ? round(perc%i%, 2) " %" : round((used%i% / 1024), 2) "/" round((cap%i% / 1024), 2) " GB")
+        GuiControl,, P%i%RV, % ((showPerc = "1") ? round(perc%i%, 2) " %" : round((used%i% / 1024), 2) "/" round((cap%i% / 1024), 2) " GB")
         GuiControl,, T%i%RV, % perc%i%
     }
 return
 
 Menu_SaveSettings:
-    IniSettings(perc, cgbg, cpcpu, cpmem, cphdd, cpbg)
+    IniSettings(showPerc, cgbg, cpcpu, cpmem, cphdd, cpbg)
 return
 
 Menu_Color_Blue:
@@ -190,7 +191,7 @@ Menu_Color_Mix:
 return
 
 Menu_Percentage:
-    perc := (perc = "0") ? "1" : "0"
+    showPerc := (showPerc = "0") ? "1" : "0"
     Menu, Tray, ToggleCheck, Toggle Percentage
 return
 
@@ -199,22 +200,11 @@ Menu_Transparency:
 return
 
 Menu_AlwaysOnTop:
-    WinSet, AlwaysOnTop, Toggle, % name
-    Menu, Tray, ToggleCheck, Toggle AlwaysOnTop
+    ToggleAlwaysOnTop()
 return
 
 Menu_ShowHide:
-    WinGet, winStyle, Style, % name
-    if (winStyle & 0x10000000)
-    {
-        WinHide, % name
-    }
-    else
-    {
-        WinShow, % name
-        WinSet, AlwaysOnTop, Toggle, % name
-        WinSet, AlwaysOnTop, Toggle, % name
-    }
+    ToggleShowHide()
 return
 
 ^WheelUp::GUITrans(1)
@@ -237,14 +227,47 @@ GUITrans(b := 1) ; GUITrans() by jNizM
     WinSet, Transparent, % ((b = 1) ? ct + 1 : ct - 1), % name
 }
 
-IniSettings(perc, cgbg, cpcpu, cpmem, cphdd, cpbg) ; IniSettings() by jNizM
+ToggleAlwaysOnTop() ; ToggleAlwaysOnTop() by jNizM
+{
+    WinGet, WS_EX_TOPMOST, ExStyle, % name
+    if (WS_EX_TOPMOST & 0x8)
+    {
+        WinSet, AlwaysOnTop, Off, % name
+        Menu, Tray, Uncheck, Toggle AlwaysOnTop
+        aot := 0
+    }
+    else
+    {
+        WinSet, AlwaysOnTop, On, % name
+        Menu, Tray, Check, Toggle AlwaysOnTop
+        aot := 1
+    }
+}
+
+ToggleShowHide()
+{
+    WinGet, WS_VISIBLE, Style, % name
+    if (WS_VISIBLE & 0x10000000)
+    {
+        WinHide, % name
+    }
+    else
+    {
+        WinShow, % name
+        WinSet, AlwaysOnTop, Toggle, % name
+        WinSet, AlwaysOnTop, Toggle, % name
+    }
+}
+
+IniSettings(showPerc, cgbg, cpcpu, cpmem, cphdd, cpbg) ; IniSettings() by jNizM
 {
     WinGetPos, winX, winY,,, % name
     IniWrite, % "X" winX, % inifile, settings, winPosX
     IniWrite, % "Y" winY, % inifile, settings, winPosY
-    IniWrite, % perc, % inifile, settings, percentage
+    IniWrite, % showPerc, % inifile, settings, showPerc
     WinGet, ct, Transparent, % name
     IniWrite, % ct, % inifile, settings, transparency
+    IniWrite, % aot, % inifile, settings, alwaysontop
 
     IniWrite, % cgbg,  % inifile, colors, color_guibg
     IniWrite, % cpcpu, % inifile, colors, color_pgbar_cpu
@@ -269,7 +292,7 @@ CPULoad() ; CPULoad() by SKAN
 GlobalMemoryStatusEx() ; GlobalMemoryStatusEx() by jNizM
 {
     static MSEX, init := VarSetCapacity(MSEX, 64, 0) && NumPut(64, MSEX, "UInt")
-    if (DllCall("Kernel32.dll\GlobalMemoryStatusEx", "Ptr", &MSEX))
+    if (DllCall("GlobalMemoryStatusEx", "Ptr", &MSEX))
     {
         return { 1 : NumGet(MSEX,  4, "UInt")
                , 2 : NumGet(MSEX,  8, "UInt64"), 3 : NumGet(MSEX, 16, "UInt64")

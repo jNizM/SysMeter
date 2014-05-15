@@ -18,11 +18,12 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Info
-* Version: v0.4
+* Version: v0.5
 * URL: [AHK Thread](http://ahkscript.org/boards/viewtopic.php?f=6&t=3521)
 
 
 ## Changelog
+* 0.5 | Some fixes; AlwaysOnTop now in saved .ini
 * 0.4 | Change text; Added Color Scheme
 * 0.3 | Save & Load Ini-Settings
 * 0.2 | Scale transparency with Strg+MWHEEL(UP|DOWN)
