@@ -3,6 +3,7 @@ Shows ComputerInfo via AutoHotkey
 
   
 ## Features
+* Shows Date, Time & Uptime (Toggle)
 * Shows CPU Usage
 * Shows RAM & SWAP Usage
 * Shows Drives Usage
@@ -11,6 +12,7 @@ Shows ComputerInfo via AutoHotkey
 * Toggle AlwaysOnTop
 * Color Scheme
 * Save Ini-Settings
+* Reload Gui on Device Changes
 
 
 ## Screenshot
@@ -18,11 +20,12 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Info
-* Version: v0.5
+* Version: v0.6
 * URL: [AHK Thread](http://ahkscript.org/boards/viewtopic.php?f=6&t=3521)
 
 
 ## Changelog
+* 0.6 | Added toggle date, time & uptime; Added reload on device change
 * 0.5 | Some fixes; AlwaysOnTop now in saved .ini
 * 0.4 | Change text; Added Color Scheme
 * 0.3 | Save & Load Ini-Settings

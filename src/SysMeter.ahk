@@ -3,13 +3,13 @@
 ; Win Version ...: Windows 7 Professional x64 SP1
 ; Description ...: Shows Info about Total, Free, Used Memory in MB;
 ;                  Total Memory in Percentage & Clear unused Memory Function
-; Version .......: v0.5
-; Modified ......: 2014.05.14-1908
+; Version .......: v0.6
+; Modified ......: 2014.05.14-1948
 ; Author ........: jNizM
 ; ===================================================================================
 ;@Ahk2Exe-SetName SysMeter
 ;@Ahk2Exe-SetDescription SysMeter
-;@Ahk2Exe-SetVersion v0.5
+;@Ahk2Exe-SetVersion v0.6
 ;@Ahk2Exe-SetCopyright Copyright (c) 2013-2014`, jNizM
 ;@Ahk2Exe-SetOrigFilename SysMeter.ahk
 ; ===================================================================================
@@ -22,8 +22,9 @@
 SetBatchLines -1
 
 global name      := "sysmeter"            ; gui name
-global version   := "v0.5"                ; version number
+global version   := "v0.6"                ; version number
 global inifile   := "sysmeter.ini"        ; filename of .ini
+global showDate  := 0                     ; toggle show date, time & uptime (0 = Off | 1 = On) 
 global showPerc  := 1                     ; toggle between % and GB (0 = GB  | 1 = % )
 global aot       := 0                     ; toggle alwaysontop (0 = Off | 1 = On)
 global cgbg      := "464646"              ; gui background color
@@ -38,6 +39,7 @@ if FileExist(inifile)
 {
     IniRead, winx, % inifile, settings, winPosX
     IniRead, winy, % inifile, settings, winPosY
+    IniRead, showDate, % inifile, settings, showDate
     IniRead, showPerc, % inifile, settings, showPerc
     IniRead, aot, % inifile, settings, alwaysOnTop
     IniRead, tran, % inifile, settings, transparency
@@ -61,6 +63,8 @@ Menu, Menu_color, Add, Purple, Menu_Color_Purple
 Menu, Menu_color, Add, Mix, Menu_Color_Mix
 Menu, Tray, Add, Color Scheme, :Menu_Color
 Menu, Tray, Add,
+Menu, Tray, Add, Toggle Time / Uptime, Menu_Time
+Menu, Tray, % ((showDate = "1") ? "Check" : "Uncheck"), Toggle Time / Uptime
 Menu, Tray, Add, Toggle Percentage, Menu_Percentage
 Menu, Tray, % ((showPerc = "1") ? "Check" : "Uncheck"), Toggle Percentage
 Menu, Tray, Add,
@@ -79,7 +83,16 @@ Gui +LastFound -Caption +ToolWindow +hwndhMain
 Gui, Margin, 10, 10
 Gui, Color, % cgbg
 Gui, Font, s10 cFFFFFF bold, Agency FB
-Gui, Add, Text, xm ym w50 0x200, % "CPU"
+if (showDate = 1)
+{
+    Gui, Add, Text, xm ym w120 0x200 vTTIM,
+    Gui, Add, Text, x+5 yp w75 0x202 vTUPT,
+    Gui, Add, Text, xm y+7 w50 0x200, % "CPU"
+}
+else
+{
+    Gui, Add, Text, xm ym w50 0x200, % "CPU"
+}
 Gui, Add, Text, x+5 yp w145 0x202 vTCPU,
 Gui, Add, Progress, xm y+2 w200 h6 c%cpcpu% Background%cpbg% vPCPU,
 Gui, Add, Text, xm y+7 w50 0x200, % "RAM"
@@ -99,12 +112,19 @@ Gui, Show, % ((winX != "") ? winX : "") ((winY != "") ? winY : "") AutoSize, % n
 WinSet, Transparent, % ((tran != "") ? tran : 200), % name
 WinSet, AlwaysOnTop, % ((aot = "1") ? "On" : "Off"), % name 
 OnMessage(0x201, "WM_LBUTTONDOWN")
+OnMessage(0x219, "WM_DEVICECHANGE")
 SetTimer, Update, 1000
 return
 
 ; SCRIPT ============================================================================
 
 Update:
+    if (showDate = 1)
+    {
+        GuiControl,, TTIM, % A_DD ". " A_MMMM " " A_YYYY "   " A_Hour ":" A_Min ":" A_Sec
+        GuiControl,, TUPT, % "UP: " GetDurationFormat(DllCall("Kernel32.dll\GetTickCount64", "UInt64") / 1000)
+    }
+
     CPU := CPULoad()
     GuiControl,, TCPU, % CPU " %"
     GuiControl,, PCPU, % CPU
@@ -137,7 +157,7 @@ Update:
 return
 
 Menu_SaveSettings:
-    IniSettings(showPerc, cgbg, cpcpu, cpmem, cphdd, cpbg)
+    IniSettings(showDate, showPerc, cgbg, cpcpu, cpmem, cphdd, cpbg)
 return
 
 Menu_Color_Blue:
@@ -190,6 +210,13 @@ Menu_Color_Mix:
     gosub Create_Gui
 return
 
+Menu_Time:
+    showdate := (showdate = "0") ? "1" : "0"
+    Menu, Tray, ToggleCheck, Toggle Time / Uptime
+    Gui, Destroy
+    gosub Create_Gui
+return
+
 Menu_Percentage:
     showPerc := (showPerc = "0") ? "1" : "0"
     Menu, Tray, ToggleCheck, Toggle Percentage
@@ -218,6 +245,17 @@ WM_LBUTTONDOWN(wParam, lParam, msg, hwnd) ; WM_LBUTTONDOWN() by an AHK-Member
     if (hwnd = hMain)
     {
         PostMessage, 0xA1, 2,,, % name
+    }
+}
+
+WM_DEVICECHANGE(wParam, lParam, msg, hwnd)
+{
+    global hMain
+    if (wParam = 0x8000 || wParam = 0x8004)
+    {
+        Thread, NoTimers
+        Gui, Destroy
+        gosub Create_Gui
     }
 }
 
@@ -259,11 +297,12 @@ ToggleShowHide()
     }
 }
 
-IniSettings(showPerc, cgbg, cpcpu, cpmem, cphdd, cpbg) ; IniSettings() by jNizM
+IniSettings(showDate, showPerc, cgbg, cpcpu, cpmem, cphdd, cpbg) ; IniSettings() by jNizM
 {
     WinGetPos, winX, winY,,, % name
     IniWrite, % "X" winX, % inifile, settings, winPosX
     IniWrite, % "Y" winY, % inifile, settings, winPosY
+    IniWrite, % showDate, % inifile, settings, showDate
     IniWrite, % showPerc, % inifile, settings, showPerc
     WinGet, ct, Transparent, % name
     IniWrite, % ct, % inifile, settings, transparency
@@ -274,6 +313,23 @@ IniSettings(showPerc, cgbg, cpcpu, cpmem, cphdd, cpbg) ; IniSettings() by jNizM
     IniWrite, % cpmem, % inifile, colors, color_pgbar_mem
     IniWrite, % cphdd, % inifile, colors, color_pgbar_hdd
     IniWrite, % cpbg,  % inifile, colors, color_pgbg
+}
+
+GetDurationFormat(ullDuration, lpFormat := "d'd 'hh:mm:ss") ; GetDurationFormat() by jNizM
+{
+    if (ullDuration < 86400)
+    {
+        lpFormat := SubStr(lpFormat, - 7)
+    }
+    VarSetCapacity(lpDurationStr, 128, 0)
+    DllCall("GetDurationFormat", "UInt",  0x400
+                               , "UInt",  0
+                               , "Ptr",   0
+                               , "Int64", ullDuration * 10000000
+                               , "WStr",  lpFormat
+                               , "WStr",  lpDurationStr
+                               , "Int",   2048)
+    return lpDurationStr
 }
 
 CPULoad() ; CPULoad() by SKAN
