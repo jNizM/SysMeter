@@ -201,8 +201,8 @@ GdipCreateBitmapFromGraphics(hGraphics, Width, Height)
 {
 	if !(DllCall("gdiplus\GdipCreateBitmapFromGraphics", "int",  Width
 	                                                   , "int",  Height
-													   , "ptr",  hGraphics
-													   , "ptr*", &hBitmap := 0))
+	                                                   , "ptr",  hGraphics
+	                                                   , "ptr*", &hBitmap := 0))
 		return hBitmap
 	MsgBox "GdipCreateBitmapFromGraphics"
 }
@@ -212,9 +212,9 @@ GdipCreateFont(hFamily, Size, Style := 0, Unit := 3)
 {
 	if !(DllCall("gdiplus\GdipCreateFont", "ptr",   hFamily
 	                                     , "float", Size
-										 , "int",   Style
-										 , "int",   Unit
-										 , "ptr*", &hFont := 0))
+	                                     , "int",   Style
+	                                     , "int",   Unit
+	                                     , "ptr*", &hFont := 0))
 		return hFont
 	MsgBox "GdipCreateBitmapFromGraphics"
 }
@@ -224,7 +224,7 @@ GdipCreateFontFamilyFromName(Family, Collection := 0)
 {
 	if !(DllCall("gdiplus\GdipCreateFontFamilyFromName", "wstr", Family
 	                                                   , "ptr",  Collection
-													   , "ptr*", &hFamily := 0))
+	                                                   , "ptr*", &hFamily := 0))
 		return hFamily
 	MsgBox "GdipCreateBitmapFromGraphics"
 }
@@ -243,8 +243,8 @@ GdipCreatePen1(ARGB, Width, Unit := 2)
 {
 	if !(DllCall("gdiplus\GdipCreatePen1", "uint",  ARGB
 	                                     , "float", Width
-										 , "int",   Unit
-										 , "ptr*",  &hPen := 0))
+	                                     , "int",   Unit
+	                                     , "ptr*",  &hPen := 0))
 		return hPen
 	MsgBox "GdipCreatePen1"
 }
@@ -271,7 +271,7 @@ GdipCreateStringFormat(Format := 0, LangID := 0)
 {
 	if !(DllCall("gdiplus\GdipCreateStringFormat", "int",  Format
 	                                             , "int",  LangID
-												 , "ptr*", &hFormat := 0))
+	                                             , "ptr*", &hFormat := 0))
 		return hFormat
 	MsgBox "GdipCreateStringFormat"
 }
@@ -280,13 +280,13 @@ GdipCreateStringFormat(Format := 0, LangID := 0)
 GdipDrawArc(hGraphics, hPen, X, Y, Width, Height, StartAngle, SweepAngle)
 {
 	if !(DllCall("gdiplus\GdipDrawArc", "ptr",   hGraphics
-								      , "ptr",   hPen
-								      , "float", X
-								      , "float", Y
-								      , "float", Width
-								      , "float", Height
-								      , "float", StartAngle
-								      , "float", SweepAngle))
+	                                  , "ptr",   hPen
+	                                  , "float", X
+	                                  , "float", Y
+	                                  , "float", Width
+	                                  , "float", Height
+	                                  , "float", StartAngle
+	                                  , "float", SweepAngle))
 		return true
 	MsgBox "GdipDrawArc"
 }
@@ -296,8 +296,8 @@ GdipDrawImage(hGraphics, hImage, X, Y)
 {
 	if !(DllCall("gdiplus\GdipDrawImage", "ptr",   hGraphics
 	                                    , "ptr",   hImage
-										, "float", X
-										, "float", Y))
+	                                    , "float", X
+	                                    , "float", Y))
 		return true
 	MsgBox "GdipDrawImage"
 }
@@ -320,11 +320,11 @@ GdipDrawString(hGraphics, String, hFont, Layout, hFormat, hBrush)
 {
 	if !(DllCall("gdiplus\GdipDrawString", "ptr",  hGraphics
 	                                     , "wstr", String
-										 , "int",  -1
-										 , "ptr",  hFont
-										 , "ptr",  Layout
-										 , "ptr",  hFormat
-										 , "ptr",  hBrush))
+	                                     , "int",  -1
+	                                     , "ptr",  hFont
+	                                     , "ptr",  Layout
+	                                     , "ptr",  hFormat
+	                                     , "ptr",  hBrush))
 		return true
 	MsgBox "GdipDrawString"
 }
@@ -333,13 +333,13 @@ GdipDrawString(hGraphics, String, hFont, Layout, hFormat, hBrush)
 GdipFillPie(hGraphics, hBrush, X, Y, Width, Height, StartAngle, SweepAngle)
 {
 	if !(DllCall("gdiplus\GdipFillPie", "ptr",   hGraphics
-								      , "ptr",   hBrush
-								      , "float", X
-								      , "float", Y
-								      , "float", Width
-								      , "float", Height
-								      , "float", StartAngle
-								      , "float", SweepAngle))
+	                                  , "ptr",   hBrush
+	                                  , "float", X
+	                                  , "float", Y
+	                                  , "float", Width
+	                                  , "float", Height
+	                                  , "float", StartAngle
+	                                  , "float", SweepAngle))
 		return true
 	MsgBox "GdipFillPie"
 }
@@ -348,11 +348,11 @@ GdipFillPie(hGraphics, hBrush, X, Y, Width, Height, StartAngle, SweepAngle)
 GdipFillRectangle(hGraphics, hBrush, X, Y, Width, Height)
 {
 	if !(DllCall("gdiplus\GdipFillRectangle", "ptr",   hGraphics
-								            , "ptr",   hBrush
-								            , "float", X
-								            , "float", Y
-								            , "float", Width
-								            , "float", Height))
+	                                        , "ptr",   hBrush
+	                                        , "float", X
+	                                        , "float", Y
+	                                        , "float", Width
+	                                        , "float", Height))
 		return true
 	MsgBox "GdipFillRectangle"
 }
