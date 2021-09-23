@@ -105,7 +105,7 @@ if (Animation)
 		GdipDrawString(hGraphicsCtxt, "RAM", hFontB, rRAM, hFormatC, hFontLight)
 		GdipDrawString(hGraphicsCtxt, Init "%", hFontM, rRAM_Usage, hFormatC, hFontDark)
 
-		for i, v in DL
+		loop DLC
 		{
 			offset := 200 + ((A_Index - 1) * 135)
 			GdipFillPie(hGraphicsCtxt, hPieBG, 30, offset, 120, 120,  0, 360)
