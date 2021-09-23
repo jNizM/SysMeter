@@ -16,7 +16,8 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Screenshot
-![Screenshot](Screenshot.PNG)
+![Screenshot](img/Screenshot.PNG)
+![Example_GDIP](img/Example_GDIP.PNG)
 
 
 ## Info
@@ -25,6 +26,7 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Changelog
+* NEW 0.1 | First v2 Release
 * 0.6 | Added toggle date, time & uptime; Added reload on device change
 * 0.5 | Some fixes; AlwaysOnTop now in saved .ini
 * 0.4 | Change text; Added Color Scheme
