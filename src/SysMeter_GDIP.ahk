@@ -449,7 +449,6 @@ SaveLocation(NewX, NewY, OldX, OldY)
 	if (A_IsCompiled)
 		return
 
-	GetLocation := LoadLocation()
 	if (NewX != OldX)
 		IniWrite NewX, A_ScriptFullPath, "Settings", "LocationX"
 	if (NewY != OldY)
