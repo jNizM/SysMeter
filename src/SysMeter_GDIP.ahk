@@ -6,7 +6,7 @@
 
 ; GLOBALS =======================================================================================================================
 
-app := Map("name", "SysMeter", "version", "0.1", "release", "2021-09-23", "author", "jNizM", "licence", "MIT")
+app := Map("name", "SysMeter", "version", "0.2", "release", "2021-09-23", "author", "jNizM", "licence", "MIT")
 
 GuiBG     := 0xFF303030
 
@@ -23,8 +23,8 @@ Animation := false
 
 /*
 [Settings]
-LocationX=243
-LocationY=379
+LocationX=
+LocationY=
 */
 
 ; INITIAL =======================================================================================================================
@@ -39,9 +39,11 @@ if (DllCall("gdiplus\GdiplusStartup", "ptr*", &GdipToken := 0, "ptr", SI, "ptr",
 
 
 DLC  := DriveList().Count
-GuiWidth   :=  30 + (120 * 2) + 5 + 10 + 30
-GuiHeight  := 200 + (120 * DLC) + 5 + 10 + 30
-GuiLocaion := LoadLocation()
+GuiWidth    :=  30 + (120 *   2) + 5 + 10 + 30
+GuiHeight   := 200 + (120 * DLC) + 5 + 10 + 30
+Location    := LoadLocation()
+GuiX        := Location["X"]
+GuiY        := Location["Y"]
 
 
 ; GUI ===========================================================================================================================
@@ -52,7 +54,10 @@ Main.MarginY := 0
 Main.SetFont("s10", "Segoe UI")
 
 Main.OnEvent("Close", Gui_Close)
-Main.Show("w" GuiWidth " h" GuiHeight " x" GuiLocaion["X"] " y" GuiLocaion["Y"])
+if (GuiX != "") && (GuiY != "")
+	Main.Show("w" GuiWidth " h" GuiHeight " x" GuiX " y" GuiY)
+else
+	Main.Show("w" GuiWidth " h" GuiHeight)
 
 
 hGraphics     := GdipCreateFromHWND(Main.hWnd)
@@ -163,8 +168,8 @@ loop
 
 Gui_Close(*)
 {
-	Main.GetPos(&X, &Y)
-	SaveLocation(X, Y)
+	Main.GetPos(&NewX, &NewY)
+	SaveLocation(NewX, NewY, GuiX, GuiY)
 	DllCall("gdiplus\GdipDeleteFont", "ptr", hFontB)
 	DllCall("gdiplus\GdipDeleteFont", "ptr", hFontM)
 	DllCall("gdiplus\GdipDeleteFont", "ptr", hFontS)
@@ -439,21 +444,31 @@ GlobalMemoryStatusEx()
 }
 
 
-SaveLocation(X, Y)
+SaveLocation(NewX, NewY, OldX, OldY)
 {
 	if (A_IsCompiled)
 		return
-	IniWrite X, A_ScriptFullPath, "Settings", "LocationX"
-	IniWrite Y, A_ScriptFullPath, "Settings", "LocationY"
+
+	GetLocation := LoadLocation()
+	if (NewX != OldX)
+		IniWrite NewX, A_ScriptFullPath, "Settings", "LocationX"
+	if (NewY != OldY)
+		IniWrite NewY, A_ScriptFullPath, "Settings", "LocationY"
 }
 
 
 LoadLocation()
 {
 	if (A_IsCompiled)
-		return
-	X := IniRead(A_ScriptFullPath, "Settings", "LocationX", 10)
-	Y := IniRead(A_ScriptFullPath, "Settings", "LocationY", 10)
-	return Map("X", X, "Y", Y)
+		return MapX("X", "", "Y", "")
+
+	X := IniRead(A_ScriptFullPath, "Settings", "LocationX", "")
+	Y := IniRead(A_ScriptFullPath, "Settings", "LocationY", "")
+	return MapX("X", X, "Y", Y)
 }
 
+
+class MapX extends Map {
+	CaseSense := "Off"
+	Default   := ""
+}
