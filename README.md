@@ -16,13 +16,14 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Screenshot
-![Screenshot](img/Screenshot.PNG)
-![Example_GDIP](img/Example_GDIP.png)
+![SysMeter](img/SysMeter.PNG)
 
 
 ## Info
-* Version: v0.6
-* URL: [AHK Thread](http://ahkscript.org/boards/viewtopic.php?f=6&t=3521)
+* Version: AHK v2
+* URL: [AHK Thread](https://www.autohotkey.com/boards/viewtopic.php?f=83&t=94947)
+* Version: AHK v1.1 (OLD)
+* URL: [AHK Thread](https://www.autohotkey.com/boards/viewtopic.php?f=6&t=3521)
 
 
 ## Changelog
