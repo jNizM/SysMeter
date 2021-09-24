@@ -6,7 +6,7 @@
 
 ; GLOBALS =======================================================================================================================
 
-app := Map("name", "SysMeter", "version", "0.3", "release", "2021-09-14", "author", "jNizM", "licence", "MIT")
+app := Map("name", "SysMeter", "version", "0.5", "release", "2021-09-14", "author", "jNizM", "licence", "MIT")
 
 GuiBG     := 0xFF303030
 
@@ -42,12 +42,15 @@ GuiY        := Location["Y"]
 
 ; GUI ===========================================================================================================================
 
-Main := Gui()
+OnMessage 0x0201, WM_LBUTTONDOWN
+
+Main := Gui("-Caption")
 Main.MarginX := 0
 Main.MarginY := 0
 Main.SetFont("s10", "Segoe UI")
 
 Main.OnEvent("Close", Gui_Close)
+Main.OnEvent("Escape", Gui_Close)
 if (GuiX != "") && (GuiY != "")
 	Main.Show("w" GuiWidth " h" GuiHeight " x" GuiX " y" GuiY)
 else
@@ -81,7 +84,7 @@ rRAM_Usage    := GdipCreateRectF(165,  84, 120, 20)
 
 
 GdipSetStringFormatAlign(hFormatC, 1)
-GdipSetStringFormatAlign(hFormatL, 1)
+GdipSetStringFormatAlign(hFormatL, 0)
 GdipSetSmoothingMode(hGraphics, 2)
 GdipSetSmoothingMode(hGraphicsCtxt, 2)
 
@@ -144,12 +147,15 @@ loop
 		GdipFillPie(hGraphicsCtxt, hPieBG, 30, offset, 120, 120,  0, 360)
 		GdipFillPie(hGraphicsCtxt, hPieFG, 30, offset, 120, 120, 90, 360 / 100 * DL[i]["Perc"])
 
+		rLetter := GdipCreateRectF(157, offset + 20, 80, 20)
+		GdipDrawString(hGraphicsCtxt, DL[i]["Letter"], hFontM, rLetter, hFormatL, hFontLight)
+
 		GdipFillRectangle(hGraphicsCtxt, hPieFG, 160, offset + 45, 6, 6)
-		rUsed := GdipCreateRectF(165, offset + 43, 80, 10)
+		rUsed := GdipCreateRectF(170, offset + 43, 80, 10)
 		GdipDrawString(hGraphicsCtxt, "Used: " DL[i]["Used"], hFontS, rUsed, hFormatL, hFontDark)
 
 		GdipFillRectangle(hGraphicsCtxt, hPieBG, 160, offset + 65, 6, 6)
-		rFree := GdipCreateRectF(165, offset + 63, 80, 10)
+		rFree := GdipCreateRectF(170, offset + 63, 80, 10)
 		GdipDrawString(hGraphicsCtxt, "Free: " DL[i]["Free"], hFontS, rFree, hFormatL, hFontDark)
 	}
 
@@ -186,6 +192,16 @@ Gui_Close(*)
 	GdipDeleteGraphics(hGraphics)
 	GdiplusShutdown(GDIPToken)
 	ExitApp
+}
+
+
+WM_LBUTTONDOWN(wParam, lParam, msg, hwnd)
+{
+	static WM_NCLBUTTONDOWN := 0x00A1
+	static HTCAPTION := 2
+
+	if (hWnd = Main.Hwnd)
+		PostMessage WM_NCLBUTTONDOWN, HTCAPTION,,, "A"
 }
 
 
