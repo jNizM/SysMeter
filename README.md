@@ -16,7 +16,7 @@ Shows ComputerInfo via AutoHotkey
 
 
 ## Screenshot
-![SysMeter](img/SysMeter.PNG)
+![SysMeter](img/SysMeter.png)
 
 
 ## Info
