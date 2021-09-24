@@ -6,7 +6,7 @@
 
 ; GLOBALS =======================================================================================================================
 
-app := Map("name", "SysMeter", "version", "0.2", "release", "2021-09-23", "author", "jNizM", "licence", "MIT")
+app := Map("name", "SysMeter", "version", "0.3", "release", "2021-09-14", "author", "jNizM", "licence", "MIT")
 
 GuiBG     := 0xFF303030
 
@@ -29,13 +29,7 @@ LocationY=
 
 ; INITIAL =======================================================================================================================
 
-SI := Buffer(24, 0)
-NumPut("uint", 1, SI)
-if (DllCall("gdiplus\GdiplusStartup", "ptr*", &GdipToken := 0, "ptr", SI, "ptr", 0, "uint"))
-{
-	MsgBox("GDI+ could not be startet!`n`nThe program will exit!")
-	ExitApp
-}
+GDIPToken := GdiplusStartup()
 
 
 DLC  := DriveList().Count
@@ -170,32 +164,53 @@ Gui_Close(*)
 {
 	Main.GetPos(&NewX, &NewY)
 	SaveLocation(NewX, NewY, GuiX, GuiY)
-	DllCall("gdiplus\GdipDeleteFont", "ptr", hFontB)
-	DllCall("gdiplus\GdipDeleteFont", "ptr", hFontM)
-	DllCall("gdiplus\GdipDeleteFont", "ptr", hFontS)
 
-	DllCall("gdiplus\GdipDeleteBrush", "ptr", hPieBG)
-	DllCall("gdiplus\GdipDeleteBrush", "ptr", hPieFG)
-	DllCall("gdiplus\GdipDeleteBrush", "ptr", hFontDark)
-	DllCall("gdiplus\GdipDeleteBrush", "ptr", hFontLight)
+	GdipDeleteFont(hFontB)
+	GdipDeleteFont(hFontM)
+	GdipDeleteFont(hFontS)
 
-	DllCall("gdiplus\GdipDeletePen", "ptr", hCircleBG)
-	DllCall("gdiplus\GdipDeletePen", "ptr", hCircleFG)
+	GdipDeleteBrush(hPieBG)
+	GdipDeleteBrush(hPieFG)
+	GdipDeleteBrush(hFontDark)
+	GdipDeleteBrush(hFontLight)
 
-	DllCall("gdiplus\GdipDeleteFontFamily", "ptr", hFamily)
-	DllCall("gdiplus\GdipDeleteStringFormat", "ptr", hFormatC)
-	DllCall("gdiplus\GdipDeleteStringFormat", "ptr", hFormatL)
+	GdipDeletePen(hCircleBG)
+	GdipDeletePen(hCircleFG)
 
-	DllCall("gdiplus\GdipDeleteGraphics", "ptr", hGraphicsCtxt)
-	DllCall("gdiplus\GdipDisposeImage", "ptr", hBitmap)
-	DllCall("gdiplus\GdipDeleteGraphics", "ptr", hGraphics)
-	if (GdipToken)
-		DllCall("gdiplus\GdiplusShutdown", "ptr", GdipToken)
+	GdipDeleteFontFamily(hFamily)
+	GdipDeleteStringFormat(hFormatC)
+	GdipDeleteStringFormat(hFormatL)
+
+	GdipDeleteGraphics(hGraphicsCtxt)
+	GdipDisposeImage(hBitmap)
+	GdipDeleteGraphics(hGraphics)
+	GdiplusShutdown(GDIPToken)
 	ExitApp
 }
 
 
-; FUNCTIONS =====================================================================================================================
+; GDI+ ==========================================================================================================================
+
+GdiplusStartup()
+{
+	GDIPSTARTUPINPUT := Buffer(24, 0)
+	NumPut("uint", 1, GDIPSTARTUPINPUT)
+	if (STATUS := DllCall("gdiplus\GdiplusStartup", "uptr*", &GDIPToken := 0, "ptr", GDIPSTARTUPINPUT, "ptr", 0, "uint"))
+	{
+		MsgBox("GDI+ could not be startet!`n`nThe program will exit!", STATUS)
+		ExitApp
+	}
+	return GDIPToken
+}
+
+
+GdiplusShutdown(GDIPToken)
+{
+	if (GDIPToken)
+		DllCall("gdiplus\GdiplusShutdown", "uptr", GDIPToken)
+	return
+}
+
 
 GdipCreateBitmapFromGraphics(hGraphics, Width, Height)
 {
@@ -204,7 +219,7 @@ GdipCreateBitmapFromGraphics(hGraphics, Width, Height)
 	                                                   , "ptr",  hGraphics
 	                                                   , "ptr*", &hBitmap := 0))
 		return hBitmap
-	MsgBox "GdipCreateBitmapFromGraphics"
+	throw Error("GdipCreateBitmapFromGraphics failed", -1)
 }
 
 
@@ -214,9 +229,9 @@ GdipCreateFont(hFamily, Size, Style := 0, Unit := 3)
 	                                     , "float", Size
 	                                     , "int",   Style
 	                                     , "int",   Unit
-	                                     , "ptr*", &hFont := 0))
+	                                     , "ptr*",  &hFont := 0))
 		return hFont
-	MsgBox "GdipCreateBitmapFromGraphics"
+	throw Error("GdipCreateFont failed", -1)
 }
 
 
@@ -226,31 +241,31 @@ GdipCreateFontFamilyFromName(Family, Collection := 0)
 	                                                   , "ptr",  Collection
 	                                                   , "ptr*", &hFamily := 0))
 		return hFamily
-	MsgBox "GdipCreateBitmapFromGraphics"
+	throw Error("GdipCreateFontFamilyFromName failed", -1)
 }
 
 
-GdipCreateFromHWND(hwnd)
+GdipCreateFromHWND(hWnd)
 {
-	if !(DllCall("gdiplus\GdipCreateFromHWND", "ptr",  hwnd
+	if !(DllCall("gdiplus\GdipCreateFromHWND", "ptr",  hWnd
 	                                         , "ptr*", &hGraphics := 0))
 		return hGraphics
-	MsgBox "GdipCreateFromHWND"
+	throw Error("GdipCreateFromHWND failed", -1)
 }
 
 
-GdipCreatePen1(ARGB, Width, Unit := 2)
+GdipCreatePen1(ARGB := 0xFF000000, Width := 1, Unit := 2)
 {
 	if !(DllCall("gdiplus\GdipCreatePen1", "uint",  ARGB
 	                                     , "float", Width
 	                                     , "int",   Unit
 	                                     , "ptr*",  &hPen := 0))
 		return hPen
-	MsgBox "GdipCreatePen1"
+	throw Error("GdipCreatePen1 failed", -1)
 }
 
 
-GdipCreateRectF(X, Y, Width, Height)
+GdipCreateRectF(X := 0, Y := 0, Width := 0, Height := 0)
 {
 	RectF := Buffer(16)
 	NumPut("float", X, "float", Y, "float", Width, "float", Height, RectF)
@@ -258,12 +273,12 @@ GdipCreateRectF(X, Y, Width, Height)
 }
 
 
-GdipCreateSolidFill(ARGB)
+GdipCreateSolidFill(ARGB := 0xFF000000)
 {
 	if !(DllCall("gdiplus\GdipCreateSolidFill", "int",  ARGB
 	                                          , "ptr*", &hBrush := 0))
 		return hBrush
-	MsgBox "GdipCreateSolidFill"
+	throw Error("GdipCreateSolidFill failed", -1)
 }
 
 
@@ -273,7 +288,63 @@ GdipCreateStringFormat(Format := 0, LangID := 0)
 	                                             , "int",  LangID
 	                                             , "ptr*", &hFormat := 0))
 		return hFormat
-	MsgBox "GdipCreateStringFormat"
+	throw Error("GdipCreateStringFormat failed", -1)
+}
+
+
+GdipDeleteBrush(hBrush)
+{
+	if !(DllCall("gdiplus\GdipDeleteBrush", "ptr", hBrush))
+		return true
+	throw Error("GdipDeleteBrush failed", -1)
+}
+
+
+GdipDeleteFont(hFont)
+{
+	if !(DllCall("gdiplus\GdipDeleteFont", "ptr", hFont))
+		return true
+	throw Error("GdipDeleteFont failed", -1)
+}
+
+
+GdipDeleteFontFamily(hFamily)
+{
+	if !(DllCall("gdiplus\GdipDeleteFontFamily", "ptr", hFamily))
+		return true
+	throw Error("GdipDeleteFontFamily failed", -1)
+}
+
+
+GdipDeleteGraphics(hGraphics)
+{
+	if !(DllCall("gdiplus\GdipDeleteGraphics", "ptr", hGraphics))
+		return true
+	throw Error("GdipDeleteGraphics failed", -1)
+}
+
+
+GdipDeletePen(hPen)
+{
+	if !(DllCall("gdiplus\GdipDeletePen", "ptr", hPen))
+		return true
+	throw Error("GdipDeletePen failed", -1)
+}
+
+
+GdipDeleteStringFormat(hFormat)
+{
+	if !(DllCall("gdiplus\GdipDeleteStringFormat", "ptr", hFormat))
+		return true
+	throw Error("GdipDeleteStringFormat failed", -1)
+}
+
+
+GdipDisposeImage(hImage)
+{
+	if !(DllCall("gdiplus\GdipDisposeImage", "ptr", hImage))
+		return true
+	throw Error("GdipDisposeImage failed", -1)
 }
 
 
@@ -288,7 +359,7 @@ GdipDrawArc(hGraphics, hPen, X, Y, Width, Height, StartAngle, SweepAngle)
 	                                  , "float", StartAngle
 	                                  , "float", SweepAngle))
 		return true
-	MsgBox "GdipDrawArc"
+	throw Error("GdipDrawArc failed", -1)
 }
 
 
@@ -299,7 +370,7 @@ GdipDrawImage(hGraphics, hImage, X, Y)
 	                                    , "float", X
 	                                    , "float", Y))
 		return true
-	MsgBox "GdipDrawImage"
+	throw Error("GdipDrawImage failed", -1)
 }
 
 
@@ -312,7 +383,7 @@ GdipDrawLine(hGraphics, hPen, X1, Y1, X2, Y2)
 	                                   , "float", X2
 	                                   , "float", Y2))
 		return true
-	MsgBox "GdipDrawLine"
+	throw Error("GdipDrawLine failed", -1)
 }
 
 
@@ -326,7 +397,7 @@ GdipDrawString(hGraphics, String, hFont, Layout, hFormat, hBrush)
 	                                     , "ptr",  hFormat
 	                                     , "ptr",  hBrush))
 		return true
-	MsgBox "GdipDrawString"
+	throw Error("GdipDrawString failed", -1)
 }
 
 
@@ -341,7 +412,7 @@ GdipFillPie(hGraphics, hBrush, X, Y, Width, Height, StartAngle, SweepAngle)
 	                                  , "float", StartAngle
 	                                  , "float", SweepAngle))
 		return true
-	MsgBox "GdipFillPie"
+	throw Error("GdipFillPie failed", -1)
 }
 
 
@@ -354,7 +425,7 @@ GdipFillRectangle(hGraphics, hBrush, X, Y, Width, Height)
 	                                        , "float", Width
 	                                        , "float", Height))
 		return true
-	MsgBox "GdipFillRectangle"
+	throw Error("GdipFillRectangle failed", -1)
 }
 
 
@@ -363,16 +434,16 @@ GdipGetImageGraphicsContext(hImage)
 	if !(DllCall("gdiplus\GdipGetImageGraphicsContext", "ptr",  hImage
 	                                                  , "ptr*", &hGraphics := 0))
 		return hGraphics
-	MsgBox "GdipGetImageGraphicsContext"
+	throw Error("GdipGetImageGraphicsContext failed", -1)
 }
 
 
-GdipGraphicsClear(hGraphics, ARGB)
+GdipGraphicsClear(hGraphics, ARGB := 0xFF000000)
 {
 	if !(DllCall("gdiplus\GdipGraphicsClear", "ptr",  hGraphics
 	                                        , "uint", ARGB))
 		return true
-	MsgBox "GdipGraphicsClear"
+	throw Error("GdipGraphicsClear failed", -1)
 }
 
 
@@ -381,7 +452,7 @@ GdipSetSmoothingMode(hGraphics, SmoothingMode)
 	if !(DllCall("gdiplus\GdipSetSmoothingMode", "ptr", hGraphics
 	                                           , "int", SmoothingMode))
 		return true
-	MsgBox "GdipSetSmoothingMode"
+	throw Error("GdipSetSmoothingMode failed", -1)
 }
 
 
@@ -390,9 +461,11 @@ GdipSetStringFormatAlign(hStringFormat, Flag)
 	if !(DllCall("gdiplus\GdipSetStringFormatAlign", "ptr", hStringFormat
 	                                               , "int", Flag))
 		return true
-	MsgBox "GdipSetStringFormatAlign"
+	throw Error("GdipSetStringFormatAlign failed", -1)
 }
 
+
+; FUNCTIONS =====================================================================================================================
 
 CPULoad() ; thx to SKAN
 {
@@ -409,27 +482,28 @@ CPULoad() ; thx to SKAN
 
 DriveList()
 {
-	Drives := Map()
+	DRIVES := Map()
 	for v in StrSplit(DriveGetList())
 	{
-		GT := DriveGetType(v ":")
-		if (GT != "Fixed") && (GT != "Removable")
+		DriveLetter := v ":"
+		DriveType   := DriveGetType(DriveLetter)
+		if (DriveType != "Fixed") && (DriveType != "Removable")
 			continue
 		try {
-			DR := Map()
-			DR["Letter"] := v
-			GC := DriveGetCapacity(v ":")
-			DR["Cap"]    := Round(GC / 1024, 2) " GB"
-			GF := DriveGetSpaceFree(v ":")
-			DR["Free"]   := Round(GF / 1024, 2) " GB"
-			DR["Used"]   := Round((GC - GF) / 1024, 2) " GB"
-			DR["Perc"]   := Round((1 - GF / GC) * 100, 0)
+			DRIVE := Map()
+			DRIVE["Letter"] := DriveLetter
+			DriveCapacity   := DriveGetCapacity(DriveLetter)
+			DriveFreeSpace  := DriveGetSpaceFree(DriveLetter)
+			DRIVE["Cap"]    := Round(DriveCapacity / 1024, 2) " GB"
+			DRIVE["Free"]   := Round(DriveFreeSpace / 1024, 2) " GB"
+			DRIVE["Used"]   := Round((DriveCapacity - DriveFreeSpace) / 1024, 2) " GB"
+			DRIVE["Perc"]   := Round((1 - DriveFreeSpace / DriveCapacity) * 100, 0)
 		} catch {
 			continue	; skip full encrypted drives (bitlocker / veracrypt / ...)
 		}
-		Drives[A_Index] := DR
+		DRIVES[A_Index] := DRIVE
 	}
-	return Drives
+	return DRIVES
 }
 
 
@@ -471,3 +545,5 @@ class MapX extends Map {
 	CaseSense := "Off"
 	Default   := ""
 }
+
+; ===============================================================================================================================
