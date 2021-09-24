@@ -33,8 +33,8 @@ GDIPToken := GdiplusStartup()
 
 
 DLC  := DriveList().Count
-GuiWidth    :=  30 + (120 *   2) + 5 + 10 + 30
-GuiHeight   := 200 + (120 * DLC) + 5 + 10 + 30
+GuiWidth    :=  30 + (120 *   2) + 15 + 30
+GuiHeight   := 200 + (120 * DLC) + (15 * (DLC - 1)) + 30
 Location    := LoadLocation()
 GuiX        := Location["X"]
 GuiY        := Location["Y"]
