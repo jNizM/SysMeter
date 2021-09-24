@@ -17,7 +17,7 @@ Shows ComputerInfo via AutoHotkey
 
 ## Screenshot
 ![Screenshot](img/Screenshot.PNG)
-![Example_GDIP](img/Example_GDIP.PNG)
+![Example_GDIP](img/Example_GDIP.png)
 
 
 ## Info
