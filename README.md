@@ -5,6 +5,7 @@ Shows ComputerInfo via AutoHotkey
 ## Features
 * Shows Date, Time & Uptime (Toggle)
 * Shows CPU Usage
+* Shows GPU Load / Memory / Temperature ([NVIDIA_NVML](https://github.com/jNizM/NVIDIA_NVML))
 * Shows RAM & SWAP Usage
 * Shows Drives Usage
 * Toggle MB/GB to Percentage
@@ -17,6 +18,7 @@ Shows ComputerInfo via AutoHotkey
 
 ## Screenshot
 ![SysMeter](img/SysMeter.png)
+![SysMeter_Simple_NVIDIA](img/SysMeter_Simple_NVIDIA.png)
 
 
 ## Info
